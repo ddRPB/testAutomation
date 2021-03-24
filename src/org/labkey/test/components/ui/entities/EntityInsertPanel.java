@@ -12,6 +12,8 @@ import org.openqa.selenium.WebElement;
 import java.util.List;
 import java.util.Map;
 
+import static org.labkey.test.WebDriverWrapper.sleep;
+
 /**
  * This class automates the UI component defined in <a href="https://github.com/LabKey/labkey-ui-components/blob/master/packages/components/src/components/entities/EntityInsertPanel.tsx">components/entities/EntityInsertPanel.tsx</a>
  * This is the same component (collection of atomic elements) used in insertAssay and createSamples.
@@ -48,7 +50,9 @@ public class EntityInsertPanel extends WebDriverComponent<EntityInsertPanel.Elem
     public EntityInsertPanel addParent(String label, String parentType)
     {
         elementCache().addParent.click();
+        sleep(5000);
         getEntityTypeSelect(label).select(parentType);
+        sleep(5000);
         return this;
     }
 
