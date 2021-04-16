@@ -66,8 +66,14 @@ public class EmailRecordTable extends Table
         }
         catch (IllegalArgumentException fallback)
         {
-            return super.getColumnIndex(headerLabel, _headerRows);
+            return super.getColumnIndex(headerLabel);
         }
+    }
+
+    @Override
+    protected int getHeaderRowIndex()
+    {
+        return _headerRows - 1;
     }
 
     public int getEmailCount()
@@ -124,12 +130,12 @@ public class EmailRecordTable extends Table
 
     private EmailMessage getMessage(Predicate<String> subjectFilter)
     {
-        int rows = getRowCount() - _footerRows;
+        int rows = getEmailCount();
 
         if (rows > 0)
         {
             int colMessage = getColumnIndex("Message");
-            for (int i = _headerRows + 1; i <= rows; i++)
+            for (int i = 0; i <= rows; i++)
             {
                 String message = getDataAsText(i, colMessage);
                 String[] lines = trimAll(StringUtils.split(message, "\n"));
@@ -297,14 +303,14 @@ public class EmailRecordTable extends Table
 
     private enum EmailColumn
     {
-        To(1),
-        From(2),
-        Time(3),
-        Date(3),
-        DateTime(3),
-        Message(4),
-        Headers(5),
-        View(6);
+        To(0),
+        From(1),
+        Time(2),
+        Date(2),
+        DateTime(2),
+        Message(3),
+        Headers(4),
+        View(5);
 
         private final int index;
 

@@ -62,7 +62,7 @@ public class Table extends WebDriverComponent<Table.Elements>
         return new Elements();
     }
 
-    protected class Elements extends Component.ElementCache
+    protected class Elements extends Component<?>.ElementCache
     {
         List<WebElement> rows;
 
@@ -72,6 +72,11 @@ public class Table extends WebDriverComponent<Table.Elements>
                 rows = Locator.xpath("./tbody/tr").findElements(this);
             return rows;
         }
+    }
+
+    protected int getHeaderRowIndex()
+    {
+        return 0;
     }
 
     public int getRowCount()
@@ -86,7 +91,7 @@ public class Table extends WebDriverComponent<Table.Elements>
      */
     public List<String> getTableHeaderTexts()
     {
-        List<WebElement> headerEls = Locator.xpath("//thead//th").findElements(this);
+        List<WebElement> headerEls = Locator.xpath("./thead/th").findElements(this);
         List<String> columnHeaders = new ArrayList<>();
         for(WebElement headerEl : headerEls){columnHeaders.add(headerEl.getText());}
         return columnHeaders;
@@ -104,12 +109,12 @@ public class Table extends WebDriverComponent<Table.Elements>
     // Maybe a possible solution would be to remove "./tbody" from the locator, but that is a thread I am not willing to pull at this time.
     private List<WebElement> getColumnHeaderElements(int headerRow)
     {
-        return getComponentElement().findElements(By.xpath("./tbody/tr["+ headerRow +"]/*[(name()='TH' or name()='TD' or name()='th' or name()='td')]"));
+        return getComponentElement().findElements(By.xpath("./tbody/tr["+ (headerRow + 1) +"]/*[(name()='TH' or name()='TD' or name()='th' or name()='td')]"));
     }
 
     public List<WebElement> getColumnHeaderElements()
     {
-        return getColumnHeaderElements(1);
+        return getColumnHeaderElements(getHeaderRowIndex());
     }
 
     public List<WebElement> getColumnHeaderElementsByTag()
@@ -119,13 +124,12 @@ public class Table extends WebDriverComponent<Table.Elements>
 
     protected int getColumnIndex(String headerLabel, int headerIndex)
     {
-        //List is zero based, locators that are going to depend on this are 1
-        return getColumnHeaders(headerIndex).indexOf(headerLabel) + 1;
+        return getColumnHeaders(headerIndex).indexOf(headerLabel);
     }
 
     public int getColumnIndex(String headerLabel)
     {
-        return getColumnIndex(headerLabel, 1);
+        return getColumnIndex(headerLabel, getHeaderRowIndex());
     }
 
     public String getDataAsText(int row, int col)
@@ -153,7 +157,7 @@ public class Table extends WebDriverComponent<Table.Elements>
 
     private WebElement _getDataAsElement(int row, int column)
     {
-        return getComponentElement().findElement(By.xpath("./tbody/tr[" +row+ "]/td[" +column+ "]"));
+        return getComponentElement().findElement(By.xpath("./tbody/tr[" + (row + 1) + "]/td[" + (column + 1) + "]"));
     }
 
     public WebElement getDataAsElement(int row, int column)
@@ -179,7 +183,7 @@ public class Table extends WebDriverComponent<Table.Elements>
 
     public List<String> getColumnAsText(String col)
     {
-        return getColumnAsText(getColumnIndex(col),1);
+        return getColumnAsText(getColumnIndex(col), getHeaderRowIndex());
     }
 
     public List<String> getColumnAsText(String col, int colIndex)
@@ -193,29 +197,13 @@ public class Table extends WebDriverComponent<Table.Elements>
         return getWrapper().getTexts(cells);
     }
 
-    public List<WebElement> getColumnAsElement(String name, int columnIndex)
-    {
-        int col = getColumnIndex(name, columnIndex);
-        return getColumnAsElement(col);
-    }
-
-    public List<WebElement> getColumnAsElement(String name)
-    {
-        return getColumnAsElement(name, 1);
-    }
-
-    public List<WebElement> getColumnAsElement(int col)
-    {
-        return getColumnAsElement(col,1);
-    }
-
     public List<WebElement> getColumnAsElement(int col, int headerIndex)
     {
         int rowCount = getRowCount();
         List<WebElement> columnElements = new ArrayList<>();
         if (rowCount > 0)
         {
-            for (int row = headerIndex + 1; row < rowCount; row++)
+            for (int row = headerIndex; row < rowCount; row++)
             {
                 columnElements.add(getDataAsElement(row, col));
             }

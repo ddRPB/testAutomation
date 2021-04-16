@@ -156,9 +156,9 @@ public class GroupTest extends BaseWebDriverTest
         waitForText("Access Modification History For This Folder");
         assertTextPresent("Folder Access Details");
 
-        int userColumn = 2;
-        int accessColumn = 3;
-        int headerIndex = 2;
+        int userColumn = 1;
+        int accessColumn = 2;
+        int headerIndex = 1;
 
         String displayName = _userHelper.getDisplayNameForEmail(TEST_USERS_FOR_GROUP[0]);
         int rowIndex = access.getRowIndex(userColumn, displayName) - headerIndex;

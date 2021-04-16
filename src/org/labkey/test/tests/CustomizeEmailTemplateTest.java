@@ -149,7 +149,7 @@ public class CustomizeEmailTemplateTest extends SpecimenBaseTest
     protected void doVerifySteps() throws Exception
     {
         EmailRecordTable emailRecordTable = goToEmailRecord();
-        EmailRecordTable.EmailMessage message = emailRecordTable.getEmailAtTableIndex(3);
+        EmailRecordTable.EmailMessage message = emailRecordTable.getEmailAtTableIndex(0);
         emailRecordTable.clickMessage(message);
         String[] bodyContents = Locator.name(_notificationDivName).findElement(getDriver()).getText().split(_delim);
         Map<String, String> emailNVPs = new HashMap<>();
