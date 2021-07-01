@@ -35,6 +35,7 @@ import org.labkey.test.util.LabKeyExpectedConditions;
 import org.labkey.test.util.LogMethod;
 import org.labkey.test.util.PortalHelper;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.ExpectedConditions;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -314,7 +315,8 @@ public class NabHighThroughputAssayTest extends BaseWebDriverTest
 
     private WebElement waitForNabGraph()
     {
-        WebElement nabGraph = Locator.tagWithAttribute("img", "alt", "Neutralization Graph").waitForElement(getDriver(), 10000);
+        WebElement nabGraph = shortWait().until(ExpectedConditions.visibilityOfElementLocated(
+                Locator.tagWithAttribute("img", "alt", "Neutralization Graph")));
         return shortWait().until(LabKeyExpectedConditions.animationIsDone(nabGraph));
     }
 
