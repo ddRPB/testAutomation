@@ -119,7 +119,14 @@ public class ApiPermissionsHelper extends PermissionsHelper
             }
             catch (CommandException ex)
             {
-                return false;
+                if (ex.getStatusCode() == 404)
+                {
+                    return false;
+                }
+                else
+                {
+                    throw new RuntimeException(ex);
+                }
             }
         }
         else if (principalType == PrincipalType.GROUP)
