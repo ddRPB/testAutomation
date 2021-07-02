@@ -910,6 +910,11 @@ public abstract class WebDriverWrapper implements WrapsDriver
         waitFor(() -> getDriver().getWindowHandles().size() > index, WAIT_FOR_JAVASCRIPT);
         List<String> windows = new ArrayList<>(getDriver().getWindowHandles());
         getDriver().switchTo().window(windows.get(index));
+        if (index > 0) // Wait for content to load in new windows
+        {
+            shortWait().until(wd -> wd.getCurrentUrl().startsWith("http")); // Make sure we are on a real page
+            waitForPageToLoad(null, WAIT_FOR_JAVASCRIPT);
+        }
     }
 
     protected void closeExtraWindows()
@@ -1856,9 +1861,13 @@ public abstract class WebDriverWrapper implements WrapsDriver
     private void waitForPageToLoad(WebElement toBeStale, int millis)
     {
         _testTimeout = true;
-        new WebDriverWait(getDriver(), millis / 1000)
-                .withMessage("waiting for browser to navigate")
-                .until(ExpectedConditions.stalenessOf(toBeStale));
+        if (toBeStale != null)
+        {
+            new WebDriverWait(getDriver(), millis / 1000)
+                    .withMessage("waiting for browser to navigate")
+                    .until(ExpectedConditions.stalenessOf(toBeStale));
+        }
+        waitForDocument();
         waitForOnReady("jQuery");
         waitForOnReady("Ext");
         waitForOnReady("Ext4");
@@ -1883,6 +1892,11 @@ public abstract class WebDriverWrapper implements WrapsDriver
         }
         mouseOut();
         _testTimeout = false;
+        if (getDriver().getTitle().isEmpty() && onLabKeyPage())
+        {
+            String warning = "Action doesn't define a page title";
+            addActionWarning(warning, getDriver().getCurrentUrl());
+        }
     }
 
     /**
@@ -1901,11 +1915,17 @@ public abstract class WebDriverWrapper implements WrapsDriver
         }
     }
 
-    private void waitForDocument()
+    private WebElement waitForDocument()
     {
-        waitFor(() -> null != executeScript("" +
+        return shortWait().withMessage("Document did not load")
+                .until(wd -> getDocumentElement());
+    }
+
+    private WebElement getDocumentElement()
+    {
+        return (WebElement) executeScript("" +
                 "try {return document.documentElement;}" +
-                "catch(e) {return null;}"), "Document did not load", getDefaultWaitForPage());
+                "catch(e) {return null;}");
     }
 
     public long doAndWaitForPageToLoad(Runnable func)
@@ -1925,7 +1945,7 @@ public abstract class WebDriverWrapper implements WrapsDriver
      * @param action Performs some action that might trigger a page load. Should return 'true' to wait for a page load.
      * @return total duration in milliseconds
      */
-    public long doAndMaybeWaitForPageToLoad(int msWait, Supplier<Boolean> action)
+    private long doAndMaybeWaitForPageToLoad(int msWait, Supplier<Boolean> action)
     {
         long startTime = System.currentTimeMillis();
         WebElement toBeStale = null;
@@ -1937,7 +1957,7 @@ public abstract class WebDriverWrapper implements WrapsDriver
                     listener.beforePageLoad();
             });
             getDriver().manage().timeouts().pageLoadTimeout(msWait, TimeUnit.MILLISECONDS);
-            toBeStale = Locators.documentRoot.findElement(getDriver()); // Document should become stale
+            toBeStale = getDocumentElement(); // Document should become stale
         }
 
         Boolean shouldWait = action.get();
@@ -1950,11 +1970,6 @@ public abstract class WebDriverWrapper implements WrapsDriver
                 if (null != listener)
                     listener.afterPageLoad();
             });
-            if (getDriver().getTitle().isEmpty() && onLabKeyPage())
-            {
-                String warning = "Action doesn't define a page title";
-                addActionWarning(warning, getDriver().getCurrentUrl());
-            }
         }
 
         return System.currentTimeMillis() - startTime;
